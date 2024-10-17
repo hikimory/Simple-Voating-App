@@ -1,40 +1,52 @@
 import { Stack } from 'expo-router';
-import { Button, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Button, FlatList, StyleSheet, Text, View, Alert} from 'react-native';
 import { Link } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
-const polls = [{ id: 1 }, { id: 2 }, { id: 3 }];
+// const polls = [{ id: 1 }, { id: 2 }, { id: 3 }];
 
-// http://localhost:8082/polls/details?id=2
-// http://localhost:8082/polls/2
-// http://localhost:8082/users/Hikimory
 
 export default function HomeScreen() {
+  const [polls, setPolls] = useState([]);
+
+  useEffect(() => {
+    const fetchPolls = async () => {
+      console.log('Fetching...');
+
+      let { data, error } = await supabase.from('polls').select('*');
+      if (error) {
+        Alert.alert('Error fetching data');
+      }
+      setPolls(data);
+    };
+    fetchPolls();
+  }, []);
+
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: 'Polls',
-          headerRight: () => (
-            <Link href={'/polls/new'}>
-              <AntDesign name="plus" size={20} color="gray" />
-            </Link>
-          ),
-        }}
-      />
-      <FlatList
-        data={polls}
-        contentContainerStyle={styles.container}
-        renderItem={({ item }) => (
-          <Link href={`/polls/${item.id}`} style={styles.pollContainer}>
-            <Text style={styles.pollTitle}>
-              {item.id}: Example poll question
-            </Text>
+    <Stack.Screen
+      options={{
+        title: 'Polls',
+        headerRight: () => (
+          <Link href={'/polls/new'}>
+            <AntDesign name="plus" size={20} color="gray" />
           </Link>
-        )}
-      />
-    </>
+        ),
+      }}
+    />
+    <FlatList
+      data={polls}
+      contentContainerStyle={styles.container}
+      renderItem={({ item }) => (
+        <Link href={`/polls/${item.id}`} style={styles.pollContainer}>
+          <Text style={styles.pollTitle}>{item.question}</Text>
+        </Link>
+      )}
+    />
+  </>
   );
 }
 
