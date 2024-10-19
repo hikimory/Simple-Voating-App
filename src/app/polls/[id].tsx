@@ -1,21 +1,94 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Button } from 'react-native';
+import { Stack, useLocalSearchParams, Redirect} from 'expo-router';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Button,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
-
-const poll = {
-  question: 'React Native vs Flutter?',
-  options: ['React Native FTW', 'Flutter', 'SwiftUI'],
-};
+import { useEffect, useState } from 'react';
+import { Poll, Vote } from '../../types/db';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../providers/AuthProvider';
 
 export default function PollDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [poll, setPoll] = useState<Poll>(null);
+  const [userVote, setUserVote] = useState<Vote>(null);
 
-  const [selected, setSelected] = useState('React Native FTW');
+  const [selected, setSelected] = useState('');
 
-  const vote = () => {
-    console.warn('Vote: ', selected);
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
+
+  useEffect(() => {
+    const fetchPolls = async () => {
+      let { data, error } = await supabase
+        .from('polls')
+        .select('*')
+        .eq('id', Number.parseInt(id))
+        .single();
+      if (error) {
+        Alert.alert('Error fetching data');
+      }
+      setPoll(data);
+    };
+
+    const fetchUserVote = async () => {
+      if (!user) {
+        return;
+      }
+      let { data, error } = await supabase
+        .from('votes')
+        .select('*')
+        .eq('poll_id', Number.parseInt(id))
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      setUserVote(data);
+      if (data) {
+        setSelected(data.option);
+      }
+    };
+
+    fetchPolls();
+    fetchUserVote();
+  }, []);
+
+  const vote = async () => {
+    const newVote = {
+      option: selected,
+      poll_id: poll.id,
+      user_id: user?.id,
+    };
+    if (userVote) {
+      newVote.id = userVote.id;
+    }
+    const { data, error } = await supabase
+      .from('votes')
+      .upsert([newVote])
+      .select()
+      .single();
+
+    if (error) {
+      console.log(error);
+      Alert.alert('Failed to vote');
+    } else {
+      setUserVote(data);
+      Alert.alert('Thank you for your vote');
+    }
   };
+
+  if (!poll) {
+    return <ActivityIndicator />;
+  }
 
   return (
     <View style={styles.container}>

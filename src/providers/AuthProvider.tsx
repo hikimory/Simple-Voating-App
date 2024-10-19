@@ -26,9 +26,6 @@ import {
     useEffect(() => {
       supabase.auth.getSession().then(async ({ data: { session } }) => {
         setSession(session);
-        if (!session) {
-          supabase.auth.signInAnonymously();
-        }
       });
   
       supabase.auth.onAuthStateChange((_event, session) => {
