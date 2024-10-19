@@ -8,5 +8,5 @@ export default function AuthLayout() {
     return <Redirect href="/profile" />;
   }
 
-  return <Stack />;
+  return <Slot />;
 }

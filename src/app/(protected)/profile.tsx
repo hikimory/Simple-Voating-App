@@ -8,7 +8,6 @@ export default function ProfileScreen() {
   if(!user) return <Redirect href="/login"/>
   return (
     <View style={{ padding: 10 }}>
-      <Stack.Screen options={{ title: 'Login' }} />
       <Text>User id: {user?.id}</Text>
       <Button title="Sign out" onPress={() => supabase.auth.signOut()} />
     </View>
