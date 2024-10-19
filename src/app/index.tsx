@@ -30,9 +30,15 @@ export default function HomeScreen() {
     <Stack.Screen
       options={{
         title: 'Polls',
+        headerTitleAlign: 'center',
         headerRight: () => (
           <Link href={'/polls/new'}>
             <AntDesign name="plus" size={20} color="gray" />
+          </Link>
+        ),
+        headerLeft: () => (
+          <Link href={'/profile'}>
+            <AntDesign name="user" size={20} color="gray" />
           </Link>
         ),
       }}
